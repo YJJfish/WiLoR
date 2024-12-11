@@ -146,9 +146,17 @@ class WiLoR(pl.LightningModule):
         mano_output = self.mano(**{k: v.float() for k,v in pred_mano_params.items()}, pose2rot=False)
         pred_keypoints_3d = mano_output.joints
         pred_vertices = mano_output.vertices
+
+        ############## Arm ##############
+        arm_dir = torch.mean(pred_vertices[:, [120, 119, 117, 118, 122, 38, 92, 234, 239, 279, 215, 214, 121, 78, 79, 108], :], dim=1, keepdim=True) - \
+            torch.mean(pred_vertices[:, [44, 33, 34, 116, 37, 39, 91, 235, 190, 191, 210, 211, 85, 52, 53, 107], :], dim=1, keepdim=True)
+        pred_vertices_with_arm = torch.clone(pred_vertices)
+        pred_vertices_with_arm[:, [120, 119, 117, 118, 122, 38, 92, 234, 239, 279, 215, 214, 121, 78, 79, 108], :] += 120.0 * arm_dir
+        ###################################
   
         output['pred_keypoints_3d'] = pred_keypoints_3d.reshape(batch_size, -1, 3)
         output['pred_vertices'] = pred_vertices.reshape(batch_size, -1, 3)
+        output['pred_vertices_with_arm'] = pred_vertices_with_arm.reshape(batch_size, -1, 3)
         pred_cam_t = pred_cam_t.reshape(-1, 3)
         focal_length = focal_length.reshape(-1, 2)
         
