@@ -380,6 +380,9 @@ class Renderer:
             scene.add_node(node)
 
         color, rend_depth = renderer.render(scene, flags=pyrender.RenderFlags.RGBA)
+        if os.environ['PYOPENGL_PLATFORM'] == 'osmesa':
+            alpha_channel = np.where(rend_depth == 0.0, 0, 255).astype(np.uint8)
+            color = np.dstack((color[:, :, :3], alpha_channel))
         color = color.astype(np.float32) / 255.0
         renderer.delete()
 
